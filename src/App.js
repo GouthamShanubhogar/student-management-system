@@ -1,59 +1,42 @@
-import './styles/App.css';
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import StudentList from './components/StudentList';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent } from './components/ui/card';
 import AddStudent from './components/AddStudent';
-import Attendance from './components/Attendance';
 
-function App() {
-  const [students, setStudents] = useState([]);
-  const [editingStudent, setEditingStudent] = useState(null);
 
-  const fetchStudents = async () => {
-    try {
-      const res = await axios.get('http://localhost:3000/api/students');
-      setStudents(res.data);
-    } catch (error) {
-      console.error("Error fetching students:", error);
-    }
-  };
 
-  useEffect(() => {
-    fetchStudents();
-  }, []);
-
-  const handleEdit = (student) => {
-    setEditingStudent(student);
-  };
+const HomePage = () => {
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-center text-blue-600 mb-8">
-        Student Management System
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-8">
+      <h1 className="text-4xl font-bold text-center text-blue-800 mb-10">
+        Student Management Dashboard
       </h1>
 
-      <AddStudent
-        onAdd={fetchStudents}
-        editingStudent={editingStudent}
-        setEditingStudent={setEditingStudent}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 max-w-5xl mx-auto">
+        <Card className="p-6 shadow-lg text-center hover:bg-blue-100 cursor-pointer transition" onClick={() => navigate('/attendance')}>
+          <h2 className="text-2xl font-semibold text-blue-700">Take Attendance</h2>
+          <p className="text-gray-600 mt-2">Mark student attendance with visual boxes</p>
+        </Card>
 
-      <StudentList
-        students={students}
-        onEdit={handleEdit}
-        onDelete={fetchStudents}
-      />
+        <Card className="p-6 shadow-lg text-center hover:bg-green-100 cursor-pointer transition" onClick={() => navigate('/results')}>
+          <h2 className="text-2xl font-semibold text-green-700">Results</h2>
+          <p className="text-gray-600 mt-2">Upload or view student marks</p>
+        </Card>
 
-      <section className="mt-12">
-        <h2 className="text-2xl font-semibold text-gray-800 mb-2">Attendance</h2>
-        <p className="text-gray-600 mb-4">
-          Mark students as <strong>Present</strong> or <strong>Absent</strong>. Recent attendance records will be shown below.
-        </p>
+        <Card className="p-6 shadow-lg text-center hover:bg-purple-100 cursor-pointer transition" onClick={() => navigate('/assignments')}>
+          <h2 className="text-2xl font-semibold text-purple-700">Assignments</h2>
+          <p className="text-gray-600 mt-2">Manage assignment uploads and tracking</p>
+        </Card>
+      </div>
 
-        <Attendance />
-      </section>
+      <div className="bg-white p-6 rounded-xl shadow-md max-w-2xl mx-auto">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4 text-center">Add New Student</h2>
+        <AddStudent onAdd={() => window.location.reload()} editingStudent={null} setEditingStudent={() => {}} />
+      </div>
     </div>
   );
-}
+};
 
-export default App;
+export default HomePage;
