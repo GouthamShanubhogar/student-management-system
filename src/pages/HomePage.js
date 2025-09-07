@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import AddStudent from './components/AddStudent';  // ✅ correct    
 
 const HomePage = () => {
   const navigate = useNavigate();

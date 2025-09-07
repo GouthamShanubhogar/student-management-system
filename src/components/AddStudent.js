@@ -1,126 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import AddStudent from './components/AddStudent';
+import React, { useState, useEffect } from "react";
+import { useStudents } from '../context/StudentContext';
 
-function formatDateForInput(dateString) {
-  if (!dateString) return '';
-
-  // If it's in full ISO format, e.g., '2025-07-09T00:00:00.000Z'
-  if (dateString.includes('T')) {
-    return dateString.split('T')[0]; // returns '2025-07-09'
-  }
-
-  // If it's already a plain date (from PostgreSQL or local state)
-  return dateString;
-}
-
-const AddStudent = ({ onAdd, editingStudent, setEditingStudent }) => {
+const AddStudent = ({ editingStudent, setEditingStudent }) => {
+  const { addStudentAndRefresh } = useStudents();
   const [student, setStudent] = useState({
-    name: '',
-    email: '',
-    department: '',
-    dob: ''
+    name: "",
+    email: "",
+    age: "",
+    gender: "",
+    phone: "",
+    address: ""
   });
 
   useEffect(() => {
     if (editingStudent) {
-      setStudent({
-        ...editingStudent,
-        dob: formatDateForInput(editingStudent.dob), // avoid timezone issue
-      });
+      setStudent(editingStudent);
     }
   }, [editingStudent]);
 
-
-  const handleChange = (e) => {
-    setStudent({ ...student, [e.target.name]: e.target.value });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 🔒 VALIDATION START
-    const nameRegex = /^[A-Za-z\s]+$/;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const today = new Date();
-    const dobDate = new Date(student.dob);
-
-    if (!student.name.trim() || !nameRegex.test(student.name)) {
-      alert('Please enter a valid name (only letters and spaces).');
+    // Simple validation
+    if (!student.name || !student.email || !student.age || !student.gender) {
+      alert("Please fill in all required fields.");
       return;
     }
-
-    if (!emailRegex.test(student.email)) {
-      alert('Please enter a valid email address.');
-      return;
-    }
-
-    if (!student.department.trim()) {
-      alert('Department is required.');
-      return;
-    }
-
-    if (!student.dob || dobDate > today) {
-      alert('Please select a valid date of birth (not in the future).');
-      return;
-    }
-    // 🔒 VALIDATION END
-
-    try {
-      if (editingStudent) {
-        await axios.put(`http://localhost:3000/api/students/${editingStudent.id}`, student);
-        alert('Student updated successfully!');
-        setEditingStudent(null);
-      } else {
-        await axios.post('http://localhost:3000/api/students', student);
-        alert('Student added successfully!');
-      }
-
-      setStudent({ name: '', email: '', department: '', dob: '' });
-      onAdd(); // Refresh the list
-    } catch (err) {
-      alert('Error saving student');
-      console.error(err);
-    }
+    await addStudentAndRefresh(student);
+    setStudent({ name: "", email: "", age: "", gender: "", phone: "", address: "" });
+    setEditingStudent && setEditingStudent(null);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h3>{editingStudent ? 'Edit Student' : 'Add New Student'}</h3>
-      <input
-        type="text"
-        name="name"
-        placeholder="Name"
-        value={student.name}
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="email"
-        name="email"
-        placeholder="Email"
-        value={student.email}
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="text"
-        name="department"
-        placeholder="Department"
-        value={student.department}
-        onChange={handleChange}
-        required
-      />
-      <input
-        type="date"
-        name="dob"
-        value={formatDateForInput(student.dob)}
-        onChange={handleChange}
-        required
-      />
-      <button type="submit">
-        {editingStudent ? 'Update Student' : 'Add Student'}
-      </button>
+    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+      <div className="flex flex-col">
+        <label className="mb-1 font-medium text-gray-700">Name<span className="text-red-500">*</span></label>
+        <input
+          type="text"
+          placeholder="Full Name"
+          value={student.name}
+          onChange={(e) => setStudent({ ...student, name: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          required
+        />
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 font-medium text-gray-700">Email<span className="text-red-500">*</span></label>
+        <input
+          type="email"
+          placeholder="Email Address"
+          value={student.email}
+          onChange={(e) => setStudent({ ...student, email: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          required
+        />
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 font-medium text-gray-700">Age<span className="text-red-500">*</span></label>
+        <input
+          type="number"
+          placeholder="Age"
+          value={student.age}
+          onChange={(e) => setStudent({ ...student, age: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          min="1"
+          required
+        />
+      </div>
+      <div className="flex flex-col">
+        <label className="mb-1 font-medium text-gray-700">Gender<span className="text-red-500">*</span></label>
+        <select
+          value={student.gender}
+          onChange={(e) => setStudent({ ...student, gender: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+          required
+        >
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div className="flex flex-col md:col-span-2">
+        <label className="mb-1 font-medium text-gray-700">Phone</label>
+        <input
+          type="tel"
+          placeholder="Phone Number"
+          value={student.phone}
+          onChange={(e) => setStudent({ ...student, phone: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
+        />
+      </div>
+      <div className="flex flex-col md:col-span-2">
+        <label className="mb-1 font-medium text-gray-700">Address</label>
+        <textarea
+          placeholder="Address"
+          value={student.address}
+          onChange={(e) => setStudent({ ...student, address: e.target.value })}
+          className="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+          rows={2}
+        />
+      </div>
+      <div className="md:col-span-2 flex justify-end">
+        <button
+          type="submit"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold shadow"
+        >
+          {editingStudent ? "Update Student" : "Add Student"}
+        </button>
+      </div>
     </form>
   );
 };
